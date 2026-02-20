@@ -102,7 +102,7 @@ export async function POST(req: Request) {
   await prisma.activityLog.create({
     data: {
       orderId: order.id,
-      actorType: session.user.role === "CUSTOMER" ? "CUSTOMER" : "STAFF",
+      actorType: "STAFF",
       actorRef: session.user.email || "unknown@printpress.local",
       eventType: "ORDER_CREATED",
       eventData: {
