@@ -8,6 +8,7 @@ services:
       deploy_on_push: true
       repo: chrisgermon/printing
     source_dir: /
+    # Runs migrations before starting the app
     run_command: npm --workspace @printpress/web run prisma:migrate:deploy && npm run start:web
     build_command: npm install && npm run build:web
     http_port: 3000
@@ -23,32 +24,51 @@ services:
         scope: RUN_AND_BUILD_TIME
         value: ${db.DATABASE_URL}
         type: SECRET
+      # DigitalOcean Spaces Configuration
       - key: SPACES_REGION
         value: nyc3
+        scope: RUN_AND_BUILD_TIME
       - key: SPACES_ENDPOINT
         value: https://nyc3.digitaloceanspaces.com
+        scope: RUN_AND_BUILD_TIME
       - key: SPACES_BUCKET
         value: printpress-proofs
+        scope: RUN_AND_BUILD_TIME
       - key: SPACES_ACCESS_KEY
+        # TODO: Replace with your actual Spaces access key in DO dashboard
         value: REPLACE_ME
         type: SECRET
+        scope: RUN_TIME
       - key: SPACES_SECRET_KEY
+        # TODO: Replace with your actual Spaces secret key in DO dashboard
         value: REPLACE_ME
         type: SECRET
+        scope: RUN_TIME
       - key: SPACES_CDN_BASE_URL
         value: https://printpress-proofs.nyc3.cdn.digitaloceanspaces.com
+        scope: RUN_AND_BUILD_TIME
+      # App & Auth Configuration
       - key: APP_URL
+        # TODO: Update this to your actual domain after setup
         value: https://app.crowdclick.com.au
+        scope: RUN_AND_BUILD_TIME
       - key: AUTH_URL
+        # TODO: Update this to match APP_URL
         value: https://app.crowdclick.com.au
+        scope: RUN_AND_BUILD_TIME
       - key: AUTH_SECRET
+        # TODO: Generate with: openssl rand -base64 32
         value: REPLACE_ME
         type: SECRET
+        scope: RUN_TIME
       - key: AUTH_TRUST_HOST
         value: "true"
+        scope: RUN_TIME
       - key: INTERNAL_API_TOKEN
+        # TODO: Generate a random secure string for internal service auth
         value: REPLACE_ME
         type: SECRET
+        scope: RUN_TIME
 
 workers:
   - name: notifications-worker
@@ -72,15 +92,21 @@ workers:
         type: SECRET
       - key: WORKER_POLL_INTERVAL_MS
         value: "5000"
+        scope: RUN_TIME
       - key: MAIL_PROVIDER
         value: postmark
+        scope: RUN_TIME
       - key: MAIL_FROM
         value: PrintPress <no-reply@crowdclick.com.au>
+        scope: RUN_TIME
       - key: POSTMARK_SERVER_TOKEN
+        # TODO: Replace with your actual Postmark server token in DO dashboard
         value: REPLACE_ME
         type: SECRET
+        scope: RUN_TIME
       - key: POSTMARK_MESSAGE_STREAM
         value: outbound
+        scope: RUN_TIME
 
 databases:
   - engine: PG
