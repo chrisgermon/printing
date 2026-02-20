@@ -18,7 +18,8 @@ const statusSchema = z.object({
   note: z.string().max(500).optional()
 });
 
-export async function POST(req: Request, { params }: { params: { id: string } }) {
+export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const session = await auth();
   if (!session?.user) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
@@ -30,7 +31,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
   const payload = statusSchema.parse(await req.json());
 
   const existingOrder = await prisma.order.findUnique({
-    where: { id: params.id },
+    where: { id },
     include: { customer: true }
   });
   if (!existingOrder) {
@@ -41,7 +42,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
   }
 
   const order = await prisma.order.update({
-    where: { id: params.id },
+    where: { id },
     data: { status: payload.status }
   });
 

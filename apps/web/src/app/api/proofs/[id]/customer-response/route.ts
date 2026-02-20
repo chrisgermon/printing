@@ -7,7 +7,8 @@ const schema = z.object({
   note: z.string().max(500).optional()
 });
 
-export async function POST(req: Request, { params }: { params: { id: string } }) {
+export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const session = await auth();
   if (!session?.user) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
@@ -19,7 +20,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
   const payload = schema.parse(await req.json());
 
   const proof = await prisma.proofFile.findUnique({
-    where: { id: params.id },
+    where: { id },
     include: {
       order: {
         include: { customer: true }
@@ -34,7 +35,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
   }
 
   const updatedProof = await prisma.proofFile.update({
-    where: { id: params.id },
+    where: { id },
     data: {
       reviewStatus: payload.action,
       reviewNote: payload.note,

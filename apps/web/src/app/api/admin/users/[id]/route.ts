@@ -27,14 +27,15 @@ const updateSchema = z.object({
   isActive: z.boolean().optional()
 });
 
-export async function PATCH(req: Request, { params }: { params: { id: string } }) {
+export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const session = await auth();
   if (!session?.user || session.user.role !== "ADMIN") {
     return Response.json({ error: "Forbidden" }, { status: 403 });
   }
 
   const payload = updateSchema.parse(await req.json());
-  const existing = await prisma.userAccount.findUnique({ where: { id: params.id } });
+  const existing = await prisma.userAccount.findUnique({ where: { id } });
   if (!existing) {
     return Response.json({ error: "User not found" }, { status: 404 });
   }
@@ -76,7 +77,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
   }
 
   const user = await prisma.userAccount.update({
-    where: { id: params.id },
+    where: { id },
     data,
     select: safeSelect
   });

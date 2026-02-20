@@ -58,8 +58,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.id = String(token.uid || "");
         session.user.role = String(token.role || "CUSTOMER") as "CUSTOMER" | "STAFF" | "ADMIN";
         session.user.userType = String(token.userType || "CLIENT") as "INTERNAL" | "CLIENT";
-        session.user.companyId = token.companyId ?? null;
-        session.user.customerId = token.customerId ?? null;
+        session.user.companyId = (token.companyId as string | null | undefined) ?? null;
+        session.user.customerId = (token.customerId as string | null | undefined) ?? null;
       }
       return session;
     }
