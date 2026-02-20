@@ -198,21 +198,27 @@ create_database() {
 
 # Create Spaces Bucket
 create_spaces_bucket() {
-    print_header "Creating Spaces Bucket"
+    print_header "Spaces Bucket Setup"
     
-    # Check if bucket exists
-    if doctl spaces list | grep -q "^${SPACES_BUCKET}$"; then
-        print_warning "Bucket '$SPACES_BUCKET' already exists"
-    else
-        print_info "Creating bucket..."
-        doctl spaces create $SPACES_BUCKET --region $REGION
-        print_success "Bucket created: $SPACES_BUCKET"
-    fi
+    print_info "Note: doctl cannot create Spaces buckets automatically."
+    print_info "Please create the bucket manually:"
+    echo ""
+    echo "  1. Go to: https://cloud.digitalocean.com/spaces"
+    echo "  2. Click 'Create Spaces Bucket'"
+    echo "  3. Choose datacenter: $REGION"
+    echo "  4. Bucket name: $SPACES_BUCKET"
+    echo "  5. Select your project"
+    echo "  6. Click 'Create Spaces Bucket'"
+    echo ""
+    echo "After creating the bucket, create an Access Key:"
+    echo "  1. Go to: https://cloud.digitalocean.com/account/api/spaces"
+    echo "  2. Click 'Generate New Key'"
+    echo "  3. Save the Key and Secret"
+    echo ""
     
-    # Get Spaces keys info
-    print_info "Note: You'll need to provide your Spaces Access Key and Secret"
-    print_info "Create one at: https://cloud.digitalocean.com/account/api/spaces"
+    read -p "Press Enter when you've created the bucket and access key..."
     
+    echo ""
     read -p "Spaces Access Key: " SPACES_ACCESS_KEY
     read -s -p "Spaces Secret Key: " SPACES_SECRET_KEY
     echo ""
