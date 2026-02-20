@@ -6,7 +6,7 @@ services:
     github:
       branch: main
       deploy_on_push: true
-      repo: your-org/printpress
+      repo: chrisgermon/printing
     source_dir: /
     run_command: npm --workspace @printpress/web run prisma:migrate:deploy && npm run start:web
     build_command: npm install && npm run build:web
@@ -55,7 +55,7 @@ workers:
     github:
       branch: main
       deploy_on_push: true
-      repo: your-org/printpress
+      repo: chrisgermon/printing
     source_dir: /
     run_command: npm run start:worker
     build_command: npm install && npm run build:worker
