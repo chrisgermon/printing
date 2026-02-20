@@ -51,10 +51,10 @@ Set these in App Platform component settings:
 - `AUTH_SECRET` -> long random secret for Auth.js sessions
 - `AUTH_TRUST_HOST` -> `true`
 - `INTERNAL_API_TOKEN` -> long random value for internal service calls
-- `MAIL_PROVIDER` -> `mailgun`
-- `MAIL_FROM` -> `PrintPress <no-reply@mg.crowdclick.com.au>`
-- `MAILGUN_DOMAIN` -> `mg.crowdclick.com.au`
-- `MAILGUN_API_KEY` -> Mailgun API key (secret)
+- `MAIL_PROVIDER` -> `postmark`
+- `MAIL_FROM` -> `PrintPress <no-reply@crowdclick.com.au>`
+- `POSTMARK_SERVER_TOKEN` -> Postmark server token (secret)
+- `POSTMARK_MESSAGE_STREAM` -> `outbound`
 
 ## 4.1 Spaces CORS policy
 
@@ -78,16 +78,13 @@ Add this CORS configuration on the Spaces bucket so browser uploads from your ap
 2. Create DNS `CNAME` from your DNS provider to DO target.
 3. Wait for TLS provisioning.
 
-## 5.1 Mailgun DNS (recommended sender domain)
+## 5.1 Postmark Sender Domain DNS
 
-Use a dedicated subdomain for outbound email: `mg.crowdclick.com.au`.
+In Postmark, verify your sender signature/domain and publish the DNS records Postmark provides:
 
-In Mailgun, add domain `mg.crowdclick.com.au` and create the DNS records they provide:
-
-- TXT (SPF)
-- TXT (DKIM)
-- MX (inbound handling, optional for outbound-only use)
-- CNAME (tracking/click domain)
+- SPF TXT record
+- DKIM TXT records
+- Return-Path CNAME (for bounce handling)
 
 ## 6. Database migration
 

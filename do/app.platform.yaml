@@ -71,14 +71,14 @@ workers:
       - key: WORKER_POLL_INTERVAL_MS
         value: "5000"
       - key: MAIL_PROVIDER
-        value: mailgun
+        value: postmark
       - key: MAIL_FROM
-        value: PrintPress <no-reply@mg.crowdclick.com.au>
-      - key: MAILGUN_DOMAIN
-        value: mg.crowdclick.com.au
-      - key: MAILGUN_API_KEY
+        value: PrintPress <no-reply@crowdclick.com.au>
+      - key: POSTMARK_SERVER_TOKEN
         value: REPLACE_ME
         type: SECRET
+      - key: POSTMARK_MESSAGE_STREAM
+        value: outbound
 
 databases:
   - engine: PG

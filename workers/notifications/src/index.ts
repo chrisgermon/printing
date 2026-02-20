@@ -5,9 +5,11 @@ const pool = new Pool({
   ssl: { rejectUnauthorized: false }
 });
 const pollIntervalMs = Number(process.env.WORKER_POLL_INTERVAL_MS || 5000);
-const mailProvider = process.env.MAIL_PROVIDER || "mailgun";
+const mailProvider = process.env.MAIL_PROVIDER || "postmark";
 const mailgunDomain = process.env.MAILGUN_DOMAIN || "";
 const mailgunApiKey = process.env.MAILGUN_API_KEY || "";
+const postmarkServerToken = process.env.POSTMARK_SERVER_TOKEN || "";
+const postmarkMessageStream = process.env.POSTMARK_MESSAGE_STREAM || "outbound";
 const mailFrom = process.env.MAIL_FROM || "PrintPress <no-reply@example.com>";
 
 type MailJobInput = {
@@ -32,37 +34,68 @@ async function lookupOrderRecipient(orderId: string): Promise<string | null> {
 }
 
 async function sendMail(input: MailJobInput): Promise<string | null> {
-  if (mailProvider !== "mailgun") {
-    console.log(`[worker] MAIL_PROVIDER=${mailProvider} (mail send skipped)`);
-    return null;
+  if (mailProvider === "postmark") {
+    if (!postmarkServerToken) {
+      throw new Error("POSTMARK_SERVER_TOKEN is missing");
+    }
+
+    const response = await fetch("https://api.postmarkapp.com/email", {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        "X-Postmark-Server-Token": postmarkServerToken
+      },
+      body: JSON.stringify({
+        From: mailFrom,
+        To: input.toEmail,
+        Subject: input.subject,
+        TextBody: input.text,
+        MessageStream: postmarkMessageStream
+      })
+    });
+
+    if (!response.ok) {
+      const responseText = await response.text();
+      throw new Error(`Postmark send failed (${response.status}): ${responseText}`);
+    }
+
+    const result = (await response.json()) as { MessageID?: string };
+    return result.MessageID ?? null;
   }
-  if (!mailgunDomain || !mailgunApiKey) {
-    throw new Error("MAILGUN_DOMAIN or MAILGUN_API_KEY is missing");
+
+  if (mailProvider === "mailgun") {
+    if (!mailgunDomain || !mailgunApiKey) {
+      throw new Error("MAILGUN_DOMAIN or MAILGUN_API_KEY is missing");
+    }
+
+    const body = new URLSearchParams();
+    body.set("from", mailFrom);
+    body.set("to", input.toEmail);
+    body.set("subject", input.subject);
+    body.set("text", input.text);
+
+    const auth = Buffer.from(`api:${mailgunApiKey}`).toString("base64");
+    const response = await fetch(`https://api.mailgun.net/v3/${mailgunDomain}/messages`, {
+      method: "POST",
+      headers: {
+        Authorization: `Basic ${auth}`,
+        "Content-Type": "application/x-www-form-urlencoded"
+      },
+      body: body.toString()
+    });
+
+    if (!response.ok) {
+      const responseText = await response.text();
+      throw new Error(`Mailgun send failed (${response.status}): ${responseText}`);
+    }
+
+    const result = (await response.json()) as { id?: string };
+    return result.id ?? null;
   }
 
-  const body = new URLSearchParams();
-  body.set("from", mailFrom);
-  body.set("to", input.toEmail);
-  body.set("subject", input.subject);
-  body.set("text", input.text);
-
-  const auth = Buffer.from(`api:${mailgunApiKey}`).toString("base64");
-  const response = await fetch(`https://api.mailgun.net/v3/${mailgunDomain}/messages`, {
-    method: "POST",
-    headers: {
-      Authorization: `Basic ${auth}`,
-      "Content-Type": "application/x-www-form-urlencoded"
-    },
-    body: body.toString()
-  });
-
-  if (!response.ok) {
-    const responseText = await response.text();
-    throw new Error(`Mailgun send failed (${response.status}): ${responseText}`);
-  }
-
-  const result = (await response.json()) as { id?: string };
-  return result.id ?? null;
+  console.log(`[worker] MAIL_PROVIDER=${mailProvider} (mail send skipped)`);
+  return null;
 }
 
 async function buildMailJob(type: string, payload: Record<string, unknown>): Promise<MailJobInput | null> {
