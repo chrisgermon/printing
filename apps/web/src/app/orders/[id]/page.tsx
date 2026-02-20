@@ -19,6 +19,21 @@ type ProofFile = {
   reviewStatus: string;
 };
 
+type Communication = {
+  id: string;
+  createdAt: Date | string;
+  toEmail: string;
+  subject: string;
+  status: string;
+};
+
+type ActivityLog = {
+  id: string;
+  createdAt: Date | string;
+  actorRef: string;
+  eventType: string;
+};
+
 export default async function OrderDetailPage({ params }: OrderPageProps) {
   const { id } = await params;
   const session = await requireSession();
@@ -135,7 +150,7 @@ export default async function OrderDetailPage({ params }: OrderPageProps) {
             <CommunicationComposer customerId={data.customer.id} defaultTo={data.customer.email} orderId={data.id} />
             {"communications" in data && data.communications.length ? (
               <div className="timeline">
-                {data.communications.map((item) => (
+                {data.communications.map((item: Communication) => (
                   <div className="timeline-item" key={item.id}>
                     <div className="timeline-meta">{new Date(item.createdAt).toLocaleString()} · {item.toEmail}</div>
                     <strong>{item.subject}</strong>
@@ -150,7 +165,7 @@ export default async function OrderDetailPage({ params }: OrderPageProps) {
         <article className="panel section">
           <h2>Activity Timeline</h2>
           <div className="timeline">
-            {data.activityLogs.map((event) => (
+            {data.activityLogs.map((event: ActivityLog) => (
               <div className="timeline-item" key={event.id}>
                 <div className="timeline-meta">
                   {new Date(event.createdAt).toLocaleString()} · {event.actorRef}
