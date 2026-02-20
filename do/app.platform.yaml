@@ -18,6 +18,7 @@ services:
     envs:
       - key: NODE_ENV
         value: production
+        scope: RUN_TIME
       - key: DATABASE_URL
         scope: RUN_AND_BUILD_TIME
         value: ${db.DATABASE_URL}
@@ -64,6 +65,7 @@ workers:
     envs:
       - key: NODE_ENV
         value: production
+        scope: RUN_TIME
       - key: DATABASE_URL
         scope: RUN_AND_BUILD_TIME
         value: ${db.DATABASE_URL}
