@@ -121,7 +121,7 @@ export default async function OrderDetailPage({ params }: OrderPageProps) {
             ) : null}
             {canCustomerRespond ? (
               <div className="stack-sm">
-                {data.proofFiles.map((proof) => (
+                {data.proofFiles.map((proof: ProofFile) => (
                   <CustomerProofResponseActions key={proof.id} proofId={proof.id} />
                 ))}
               </div>
