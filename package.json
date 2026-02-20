@@ -1,0 +1,17 @@
+{
+  "name": "printpress",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "apps/*",
+    "workers/*"
+  ],
+  "scripts": {
+    "dev:web": "npm --workspace @printpress/web run dev",
+    "build:web": "npm --workspace @printpress/web run build",
+    "start:web": "npm --workspace @printpress/web run start",
+    "dev:worker": "npm --workspace @printpress/notifications-worker run dev",
+    "build:worker": "npm --workspace @printpress/notifications-worker run build",
+    "start:worker": "npm --workspace @printpress/notifications-worker run start"
+  }
+}

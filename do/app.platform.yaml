@@ -1,0 +1,88 @@
+name: printpress
+region: nyc
+services:
+  - name: web
+    environment_slug: node-js
+    github:
+      branch: main
+      deploy_on_push: true
+      repo: your-org/printpress
+    source_dir: /
+    run_command: npm --workspace @printpress/web run prisma:migrate:deploy && npm run start:web
+    build_command: npm install && npm run build:web
+    http_port: 3000
+    instance_count: 1
+    instance_size_slug: apps-s-1vcpu-1gb
+    routes:
+      - path: /
+    envs:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        scope: RUN_AND_BUILD_TIME
+        value: ${db.DATABASE_URL}
+        type: SECRET
+      - key: SPACES_REGION
+        value: nyc3
+      - key: SPACES_ENDPOINT
+        value: https://nyc3.digitaloceanspaces.com
+      - key: SPACES_BUCKET
+        value: printpress-proofs
+      - key: SPACES_ACCESS_KEY
+        value: REPLACE_ME
+        type: SECRET
+      - key: SPACES_SECRET_KEY
+        value: REPLACE_ME
+        type: SECRET
+      - key: SPACES_CDN_BASE_URL
+        value: https://printpress-proofs.nyc3.cdn.digitaloceanspaces.com
+      - key: APP_URL
+        value: https://app.crowdclick.com.au
+      - key: AUTH_URL
+        value: https://app.crowdclick.com.au
+      - key: AUTH_SECRET
+        value: REPLACE_ME
+        type: SECRET
+      - key: AUTH_TRUST_HOST
+        value: "true"
+      - key: INTERNAL_API_TOKEN
+        value: REPLACE_ME
+        type: SECRET
+
+workers:
+  - name: notifications-worker
+    environment_slug: node-js
+    github:
+      branch: main
+      deploy_on_push: true
+      repo: your-org/printpress
+    source_dir: /
+    run_command: npm run start:worker
+    build_command: npm install && npm run build:worker
+    instance_count: 1
+    instance_size_slug: apps-s-1vcpu-1gb
+    envs:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        scope: RUN_AND_BUILD_TIME
+        value: ${db.DATABASE_URL}
+        type: SECRET
+      - key: WORKER_POLL_INTERVAL_MS
+        value: "5000"
+      - key: MAIL_PROVIDER
+        value: mailgun
+      - key: MAIL_FROM
+        value: PrintPress <no-reply@mg.crowdclick.com.au>
+      - key: MAILGUN_DOMAIN
+        value: mg.crowdclick.com.au
+      - key: MAILGUN_API_KEY
+        value: REPLACE_ME
+        type: SECRET
+
+databases:
+  - engine: PG
+    name: db
+    num_nodes: 1
+    size: db-s-1vcpu-1gb
+    version: "16"
