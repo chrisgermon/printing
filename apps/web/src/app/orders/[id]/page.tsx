@@ -9,14 +9,22 @@ import { demoOrder } from "@/lib/demo-data";
 import { requireSession } from "@/lib/auth";
 
 type OrderPageProps = {
-  params: { id: string };
+  params: Promise<{ id: string }>;
+};
+
+type ProofFile = {
+  id: string;
+  fileName: string;
+  createdAt: Date | string;
+  reviewStatus: string;
 };
 
 export default async function OrderDetailPage({ params }: OrderPageProps) {
+  const { id } = await params;
   const session = await requireSession();
   const order = await prisma.order
     .findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         customer: true,
         proofFiles: { orderBy: { createdAt: "desc" } },
@@ -91,7 +99,7 @@ export default async function OrderDetailPage({ params }: OrderPageProps) {
             <h2>Proof Files</h2>
             <div className="list">
               {data.proofFiles.length ? (
-                data.proofFiles.map((proof) => (
+                data.proofFiles.map((proof: ProofFile) => (
                   <div className="row" key={proof.id}>
                     <div>
                       <strong>{proof.fileName}</strong>
@@ -106,7 +114,7 @@ export default async function OrderDetailPage({ params }: OrderPageProps) {
             </div>
             {canUpdateStatus ? (
               <div className="stack-sm">
-                {data.proofFiles.map((proof) => (
+                {data.proofFiles.map((proof: ProofFile) => (
                   <ProofReviewActions key={proof.id} proofId={proof.id} />
                 ))}
               </div>

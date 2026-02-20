@@ -5,7 +5,7 @@ import { requireSession } from "@/lib/auth";
 import { CommunicationComposer } from "@/components/CommunicationComposer";
 
 type ClientPageProps = {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 };
 
 type ClientOrderRow = {
@@ -32,11 +32,12 @@ type ActivityLogRow = {
 };
 
 export default async function ClientDetailPage({ params }: ClientPageProps) {
+  const { id } = await params;
   const session = await requireSession(["STAFF", "ADMIN"]);
 
   const customer = await prisma.customer
     .findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         orders: { orderBy: { createdAt: "desc" }, take: 20 }
       }
