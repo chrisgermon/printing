@@ -8,6 +8,29 @@ type ClientPageProps = {
   params: { id: string };
 };
 
+type ClientOrderRow = {
+  id: string;
+  title: string;
+  createdAt: Date | string;
+  quantity: number;
+  status: string;
+};
+
+type CommunicationRow = {
+  id: string;
+  createdAt: Date | string;
+  toEmail: string;
+  subject: string;
+  status: string;
+};
+
+type ActivityLogRow = {
+  id: string;
+  createdAt: Date | string;
+  eventType: string;
+  actorRef: string;
+};
+
 export default async function ClientDetailPage({ params }: ClientPageProps) {
   const session = await requireSession(["STAFF", "ADMIN"]);
 
@@ -57,6 +80,9 @@ export default async function ClientDetailPage({ params }: ClientPageProps) {
         communications
       }
     : demoClient;
+  const orders = data.orders as ClientOrderRow[];
+  const activity = data.activityLogs as ActivityLogRow[];
+  const crm = ("communications" in data ? data.communications : []) as CommunicationRow[];
 
   return (
     <main className="portal-shell">
@@ -77,7 +103,7 @@ export default async function ClientDetailPage({ params }: ClientPageProps) {
           <article className="panel section">
             <h2>Client Orders</h2>
             <div className="list">
-              {data.orders.map((order) => (
+              {orders.map((order) => (
                 <div className="row" key={order.id}>
                   <div>
                     <strong>{order.title}</strong>
@@ -95,16 +121,14 @@ export default async function ClientDetailPage({ params }: ClientPageProps) {
             <h2>CRM Notes</h2>
             <CommunicationComposer customerId={data.id} defaultTo={data.email} />
             <div className="timeline">
-              {"communications" in data
-                ? data.communications.map((item) => (
-                    <div className="timeline-item" key={item.id}>
-                      <div className="timeline-meta">{new Date(item.createdAt).toLocaleString()} · {item.toEmail}</div>
-                      <strong>{item.subject}</strong>
-                      <span className="muted-text">{item.status}</span>
-                    </div>
-                  ))
-                : null}
-              {data.activityLogs.map((log) => (
+              {crm.map((item) => (
+                <div className="timeline-item" key={item.id}>
+                  <div className="timeline-meta">{new Date(item.createdAt).toLocaleString()} · {item.toEmail}</div>
+                  <strong>{item.subject}</strong>
+                  <span className="muted-text">{item.status}</span>
+                </div>
+              ))}
+              {activity.map((log) => (
                 <div className="timeline-item" key={log.id}>
                   <div className="timeline-meta">{new Date(log.createdAt).toLocaleString()}</div>
                   <strong>{log.eventType.replaceAll("_", " ")}</strong>
