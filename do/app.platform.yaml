@@ -8,8 +8,8 @@ services:
       deploy_on_push: true
       repo: chrisgermon/printing
     source_dir: /
-    run_command: npm run start:web
-    build_command: npm install && npm --workspace @printpress/web run prisma:generate && npm run build:web
+    run_command: HOSTNAME=0.0.0.0 node apps/web/.next/standalone/apps/web/server.js
+    build_command: npm install && npm --workspace @printpress/web run prisma:generate && npm run build:web && cp -r apps/web/.next/static apps/web/.next/standalone/apps/web/.next/static
     http_port: 3000
     instance_count: 1
     instance_size_slug: apps-s-1vcpu-2gb

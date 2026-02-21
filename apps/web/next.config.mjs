@@ -1,11 +1,12 @@
+import { dirname, resolve } from "path";
+import { fileURLToPath } from "url";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: "standalone",
-  // Exclude API routes from static generation
-  experimental: {
-    // Disable static generation for API routes
-    workerThreads: false
-  }
+  outputFileTracingRoot: resolve(__dirname, "../../")
 };
 
 export default nextConfig;
