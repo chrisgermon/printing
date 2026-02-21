@@ -1,3 +1,6 @@
+// Mark this route as dynamic to prevent static generation
+export const dynamic = 'force-dynamic';
+
 import { prisma } from "@/lib/db";
 import { auth } from "@/auth";
 import { z } from "zod";
