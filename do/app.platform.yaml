@@ -1,5 +1,5 @@
-name: printpress
-region: nyc
+name: print-app
+region: syd
 services:
   - name: web
     environment_slug: node-js
@@ -12,7 +12,7 @@ services:
     build_command: npm install && npm --workspace @printpress/web run prisma:generate && npm run build:web
     http_port: 3000
     instance_count: 1
-    instance_size_slug: apps-s-1vcpu-1gb
+    instance_size_slug: apps-s-1vcpu-2gb
     routes:
       - path: /
     envs:
@@ -23,12 +23,12 @@ services:
         scope: RUN_AND_BUILD_TIME
         value: ${db.DATABASE_URL}
         type: SECRET
-      # DigitalOcean Spaces Configuration
+      # DigitalOcean Spaces Configuration (Sydney region)
       - key: SPACES_REGION
-        value: nyc3
+        value: syd1
         scope: RUN_AND_BUILD_TIME
       - key: SPACES_ENDPOINT
-        value: https://nyc3.digitaloceanspaces.com
+        value: https://syd1.digitaloceanspaces.com
         scope: RUN_AND_BUILD_TIME
       - key: SPACES_BUCKET
         value: printpress-proofs
@@ -44,28 +44,24 @@ services:
         type: SECRET
         scope: RUN_TIME
       - key: SPACES_CDN_BASE_URL
-        value: https://printpress-proofs.nyc3.cdn.digitaloceanspaces.com
+        value: https://printpress-proofs.syd1.cdn.digitaloceanspaces.com
         scope: RUN_AND_BUILD_TIME
       # App & Auth Configuration
       - key: APP_URL
-        # TODO: Update this to your actual domain after setup
-        value: https://app.crowdclick.com.au
+        value: https://crowdclick.com.au
         scope: RUN_AND_BUILD_TIME
       - key: AUTH_URL
-        # TODO: Update this to match APP_URL
-        value: https://app.crowdclick.com.au
+        value: https://crowdclick.com.au
         scope: RUN_AND_BUILD_TIME
       - key: AUTH_SECRET
-        # TODO: Generate with: openssl rand -base64 32
-        value: REPLACE_ME
+        value: 9MfItK5Wq7LM1J05ry9WkshgHoGT6O/mgcrxEPy5YzQ=
         type: SECRET
         scope: RUN_TIME
       - key: AUTH_TRUST_HOST
         value: "true"
         scope: RUN_TIME
       - key: INTERNAL_API_TOKEN
-        # TODO: Generate a random secure string for internal service auth
-        value: REPLACE_ME
+        value: e7be685d146d1f63ef55f041ace3c42aea916d719409bdc3968eeccdc1ca0b55
         type: SECRET
         scope: RUN_TIME
 
@@ -113,3 +109,4 @@ databases:
     num_nodes: 1
     size: db-s-1vcpu-1gb
     version: "16"
+    region: syd
