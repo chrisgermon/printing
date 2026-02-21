@@ -10,7 +10,7 @@ services:
     source_dir: /
     run_command: node apps/web/.next/standalone/apps/web/server.js
     build_command: npm install && npm --workspace @printpress/web run prisma:generate && NODE_OPTIONS=--max-old-space-size=1536 npm run build:web && cp -r apps/web/.next/static apps/web/.next/standalone/apps/web/.next/static
-    http_port: 3000
+    http_port: 8080
     instance_count: 1
     instance_size_slug: apps-s-1vcpu-2gb
     routes:
