@@ -233,11 +233,24 @@ body {
   align-items: center;
   gap: 10px;
   background: rgba(7, 13, 24, 0.7);
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.row:hover {
+  border-color: rgba(152, 179, 208, 0.35);
+  background: rgba(15, 23, 38, 0.8);
 }
 
 .row-link {
   color: inherit;
   text-decoration: none;
+}
+
+.row-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
 }
 
 .row strong {
@@ -256,6 +269,63 @@ body {
   font-size: 0.74rem;
   border: 1px solid var(--line);
   white-space: nowrap;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.pill-lg {
+  padding: 8px 14px;
+  font-size: 0.8rem;
+}
+
+/* Status pill colors */
+.pill-received {
+  background: rgba(59, 130, 246, 0.15);
+  border-color: rgba(59, 130, 246, 0.4);
+  color: #93bbfd;
+}
+
+.pill-proof {
+  background: rgba(139, 92, 246, 0.15);
+  border-color: rgba(139, 92, 246, 0.4);
+  color: #c4b5fd;
+}
+
+.pill-approval {
+  background: rgba(245, 158, 11, 0.15);
+  border-color: rgba(245, 158, 11, 0.4);
+  color: #fcd34d;
+}
+
+.pill-approved {
+  background: rgba(34, 197, 94, 0.15);
+  border-color: rgba(34, 197, 94, 0.4);
+  color: #86efac;
+}
+
+.pill-printing {
+  background: rgba(99, 102, 241, 0.15);
+  border-color: rgba(99, 102, 241, 0.4);
+  color: #a5b4fc;
+}
+
+.pill-shipping {
+  background: rgba(6, 182, 212, 0.15);
+  border-color: rgba(6, 182, 212, 0.4);
+  color: #67e8f9;
+}
+
+.pill-delivered {
+  background: rgba(34, 197, 94, 0.2);
+  border-color: rgba(34, 197, 94, 0.5);
+  color: #4ade80;
+}
+
+.pill-cancelled {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.4);
+  color: #fca5a5;
 }
 
 .plans {
@@ -316,12 +386,28 @@ body {
   padding: 10px 14px;
   font-weight: 700;
   font-size: 0.86rem;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s, transform 0.1s;
+}
+
+.btn:hover {
+  border-color: rgba(152, 179, 208, 0.4);
+  background: rgba(15, 23, 38, 0.85);
+}
+
+.btn:active {
+  transform: scale(0.98);
 }
 
 .btn-primary {
   border-color: rgba(71, 217, 183, 0.45);
   background: linear-gradient(140deg, rgba(32, 156, 129, 0.95), rgba(35, 181, 150, 0.95));
   color: #061119;
+}
+
+.btn-primary:hover {
+  border-color: rgba(71, 217, 183, 0.7);
+  background: linear-gradient(140deg, rgba(38, 176, 147, 0.95), rgba(42, 200, 168, 0.95));
 }
 
 .form-grid {
@@ -646,6 +732,84 @@ body {
   }
 }
 
+/* Breadcrumbs */
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.84rem;
+  color: var(--muted);
+}
+
+.breadcrumb a {
+  color: var(--primary);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.breadcrumb a:hover {
+  color: var(--text);
+}
+
+.breadcrumb span {
+  color: var(--muted);
+}
+
+.breadcrumb span:last-child {
+  color: var(--text);
+  font-weight: 600;
+}
+
+/* Empty state for portal pages */
+.empty-state-portal {
+  text-align: center;
+  padding: 32px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.empty-state-portal p {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+/* Focus-visible for form inputs */
+.form-grid input:focus-visible,
+.form-grid select:focus-visible,
+.form-grid textarea:focus-visible,
+.status-form input:focus-visible,
+.status-form select:focus-visible,
+.status-form textarea:focus-visible,
+.filter-row input:focus-visible,
+.filter-row select:focus-visible,
+.review-actions input:focus-visible {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-soft);
+}
+
+/* Two-column filter row for clients page */
+.filter-row-2col {
+  grid-template-columns: 1fr auto;
+}
+
+/* Sticky sidebar */
+.sidebar {
+  position: sticky;
+  top: 32px;
+  align-self: start;
+  max-height: calc(100vh - 64px);
+}
+
+/* Nav link hover transition */
+.nav a {
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
+}
+
 @media (max-width: 980px) {
   .portal-grid {
     grid-template-columns: 1fr;
@@ -677,6 +841,19 @@ body {
 
   .hero-side {
     justify-items: start;
+  }
+
+  .sidebar {
+    position: static;
+    max-height: none;
+  }
+
+  .breadcrumb {
+    flex-wrap: wrap;
+  }
+
+  .filter-row-2col {
+    grid-template-columns: 1fr;
   }
 
   .toast-container {

@@ -56,6 +56,14 @@
   color: #fff;
 }
 
+.admin-nav-item.active {
+  background: rgba(255,255,255,0.12);
+  color: #fff;
+  font-weight: 600;
+  border-left: 3px solid #47d9b7;
+  padding-left: calc(1rem - 3px);
+}
+
 .admin-nav-icon {
   font-size: 1.25rem;
   width: 1.5rem;
