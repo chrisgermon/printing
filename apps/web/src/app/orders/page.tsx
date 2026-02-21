@@ -13,6 +13,14 @@ type OrdersPageProps = {
   };
 };
 
+type OrderListItem = {
+  id: string;
+  title: string;
+  quantity: number;
+  status: string;
+  customer?: { name: string };
+};
+
 export default async function OrdersPage({ searchParams }: OrdersPageProps) {
   const session = await requireSession();
   const q = (searchParams?.q || "").trim();
@@ -98,12 +106,12 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
           </form>
 
           <div className="list">
-            {(hasData ? orders : fallbackOrders).map((order) => (
+            {(hasData ? orders : fallbackOrders).map((order: OrderListItem) => (
               <Link className="row row-link" href={`/orders/${order.id}`} key={order.id}>
                 <div>
                   <strong>{order.title}</strong>
                   <span>
-                    {"customer" in order ? order.customer.name : "CrowdClick Agency"} · {order.quantity.toLocaleString()} units
+                    {order.customer?.name ?? "CrowdClick Agency"} · {order.quantity.toLocaleString()} units
                   </span>
                 </div>
                 <div className="pill">{String(order.status).replaceAll("_", " ")}</div>
