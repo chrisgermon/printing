@@ -7,6 +7,8 @@
     "workers/*"
   ],
   "scripts": {
+    "build": "npm --workspace @printpress/web run prisma:generate && npm --workspace @printpress/web run build",
+    "start": "npm run start:web",
     "dev:web": "npm --workspace @printpress/web run dev",
     "build:web": "npm --workspace @printpress/web run build",
     "start:web": "npm --workspace @printpress/web run start",
