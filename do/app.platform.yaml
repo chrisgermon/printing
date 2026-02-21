@@ -10,7 +10,7 @@ services:
     source_dir: /
     # Runs migrations before starting the app
     run_command: npm --workspace @printpress/web run prisma:migrate:deploy && npm run start:web
-    build_command: npm install && npm run build:web
+    build_command: npm install && npm --workspace @printpress/web run prisma:generate && npm run build:web
     http_port: 3000
     instance_count: 1
     instance_size_slug: apps-s-1vcpu-1gb
