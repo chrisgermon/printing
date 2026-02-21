@@ -2,9 +2,11 @@
 
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
+import { useToast } from "@/components/ToastProvider";
 
 export function OrderRequestForm() {
   const router = useRouter();
+  const { addToast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -37,10 +39,13 @@ export function OrderRequestForm() {
       }
 
       const result: { orderId: string } = await response.json();
+      addToast("Order created successfully", "success");
       router.push(`/orders/${result.orderId}`);
       router.refresh();
     } catch (submitError) {
-      setError(submitError instanceof Error ? submitError.message : "Failed to submit order");
+      const msg = submitError instanceof Error ? submitError.message : "Failed to submit order";
+      setError(msg);
+      addToast("Failed to create order. Please try again.", "error");
     } finally {
       setIsSubmitting(false);
     }

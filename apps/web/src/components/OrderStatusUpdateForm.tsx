@@ -2,6 +2,7 @@
 
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useToast } from "@/components/ToastProvider";
 
 const STATUS_OPTIONS = [
   "RECEIVED",
@@ -18,6 +19,7 @@ const STATUS_OPTIONS = [
 
 export function OrderStatusUpdateForm({ orderId, currentStatus }: { orderId: string; currentStatus: string }) {
   const router = useRouter();
+  const { addToast } = useToast();
   const [status, setStatus] = useState(currentStatus);
   const [note, setNote] = useState("");
   const [pending, setPending] = useState(false);
@@ -42,10 +44,14 @@ export function OrderStatusUpdateForm({ orderId, currentStatus }: { orderId: str
         throw new Error("Failed to update order status.");
       }
 
+      const label = status.replaceAll("_", " ");
       setResult("Status updated");
+      addToast(`Status updated to ${label}`, "success");
       router.refresh();
     } catch (error) {
-      setResult(error instanceof Error ? error.message : "Failed to update status");
+      const msg = error instanceof Error ? error.message : "Failed to update status";
+      setResult(msg);
+      addToast("Failed to update status. Please try again.", "error");
     } finally {
       setPending(false);
     }

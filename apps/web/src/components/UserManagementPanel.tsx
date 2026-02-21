@@ -2,6 +2,7 @@
 
 import { FormEvent, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useToast } from "@/components/ToastProvider";
 
 type Company = { id: string; name: string };
 type Customer = { id: string; name: string; email: string; companyId: string | null };
@@ -28,6 +29,7 @@ export function UserManagementPanel({
   users: User[];
 }) {
   const router = useRouter();
+  const { addToast } = useToast();
   const [pending, setPending] = useState(false);
   const [result, setResult] = useState<string | null>(null);
   const [newUserType, setNewUserType] = useState<"INTERNAL" | "CLIENT">("INTERNAL");
@@ -77,10 +79,13 @@ export function UserManagementPanel({
         throw new Error("Failed to create user");
       }
       setResult("User created");
+      addToast("User created successfully", "success");
       event.currentTarget.reset();
       router.refresh();
     } catch (error) {
-      setResult(error instanceof Error ? error.message : "Failed to create user");
+      const msg = error instanceof Error ? error.message : "Failed to create user";
+      setResult(msg);
+      addToast("Failed to create user. Please try again.", "error");
     } finally {
       setPending(false);
     }
@@ -98,10 +103,14 @@ export function UserManagementPanel({
       if (!response.ok) {
         throw new Error("Failed to update user");
       }
-      setResult(`User ${!user.isActive ? "activated" : "disabled"}`);
+      const msg = `User ${!user.isActive ? "activated" : "disabled"}`;
+      setResult(msg);
+      addToast(msg, "success");
       router.refresh();
     } catch (error) {
-      setResult(error instanceof Error ? error.message : "Failed to update user");
+      const errMsg = error instanceof Error ? error.message : "Failed to update user";
+      setResult(errMsg);
+      addToast("Failed to update user. Please try again.", "error");
     } finally {
       setPending(false);
     }
@@ -122,9 +131,12 @@ export function UserManagementPanel({
         throw new Error("Failed to update role");
       }
       setResult(`Role updated to ${nextRole}`);
+      addToast(`Role updated to ${nextRole}`, "success");
       router.refresh();
     } catch (error) {
-      setResult(error instanceof Error ? error.message : "Failed to update role");
+      const errMsg = error instanceof Error ? error.message : "Failed to update role";
+      setResult(errMsg);
+      addToast("Failed to update role. Please try again.", "error");
     } finally {
       setPending(false);
     }
@@ -145,8 +157,11 @@ export function UserManagementPanel({
         throw new Error("Failed to reset password");
       }
       setResult("Password reset");
+      addToast("Password reset successfully", "success");
     } catch (error) {
-      setResult(error instanceof Error ? error.message : "Failed to reset password");
+      const errMsg = error instanceof Error ? error.message : "Failed to reset password";
+      setResult(errMsg);
+      addToast("Failed to reset password. Please try again.", "error");
     } finally {
       setPending(false);
     }

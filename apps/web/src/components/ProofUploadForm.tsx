@@ -2,9 +2,11 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useToast } from "@/components/ToastProvider";
 
 export function ProofUploadForm({ orderId }: { orderId: string }) {
   const router = useRouter();
+  const { addToast } = useToast();
   const [file, setFile] = useState<File | null>(null);
   const [pending, setPending] = useState(false);
   const [result, setResult] = useState<string | null>(null);
@@ -45,10 +47,13 @@ export function ProofUploadForm({ orderId }: { orderId: string }) {
       }
 
       setResult("Upload complete.");
+      addToast("Proof uploaded successfully", "success");
       setFile(null);
       router.refresh();
     } catch (error) {
-      setResult(error instanceof Error ? error.message : "Upload failed.");
+      const msg = error instanceof Error ? error.message : "Upload failed.";
+      setResult(msg);
+      addToast("Failed to upload proof. Please try again.", "error");
     } finally {
       setPending(false);
     }

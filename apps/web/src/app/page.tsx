@@ -1,53 +1,107 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { requireSession } from "@/lib/auth";
-import { LogoutButton } from "@/components/LogoutButton";
+import { prisma } from "@/lib/db";
+import { UserNav } from "@/components/UserNav";
+
+const STATUS_LABELS: Record<string, string> = {
+  RECEIVED: "Received",
+  PROOF_PREPARING: "Proof Preparing",
+  PROOF_SENT: "Proof Sent",
+  AWAITING_APPROVAL: "Awaiting Approval",
+  APPROVED: "Approved",
+  PRINTING: "Printing",
+  READY_TO_SHIP: "Ready to Ship",
+  SHIPPED: "Shipped",
+  DELIVERED: "Delivered",
+  CANCELLED: "Cancelled"
+};
 
 export default async function HomePage() {
   const session = await requireSession();
+
+  if (session.role === "CUSTOMER") {
+    redirect("/orders");
+  }
+
+  const companyFilter =
+    session.role === "ADMIN" ? {} : { customer: { companyId: session.companyId } };
+  const proofCompanyFilter =
+    session.role === "ADMIN" ? {} : { order: { customer: { companyId: session.companyId } } };
+
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+  const todayEnd = new Date();
+  todayEnd.setHours(23, 59, 59, 999);
+
+  const [activeJobs, proofsWaiting, shippingToday, atRisk, pipelineRaw, proofQueue] =
+    await Promise.all([
+      prisma.order.count({
+        where: { ...companyFilter, status: { notIn: ["DELIVERED", "CANCELLED"] } }
+      }),
+      prisma.proofFile.count({
+        where: { ...proofCompanyFilter, reviewStatus: "PENDING" }
+      }),
+      prisma.order.count({
+        where: {
+          ...companyFilter,
+          status: "READY_TO_SHIP",
+          dueDate: { gte: todayStart, lte: todayEnd }
+        }
+      }),
+      prisma.order.count({
+        where: {
+          ...companyFilter,
+          status: { notIn: ["DELIVERED", "CANCELLED"] },
+          dueDate: { lt: todayStart }
+        }
+      }),
+      prisma.order.groupBy({
+        by: ["status"],
+        _count: true,
+        where: { ...companyFilter, status: { notIn: ["DELIVERED", "CANCELLED"] } }
+      }),
+      prisma.proofFile.findMany({
+        where: { ...proofCompanyFilter, reviewStatus: "PENDING" },
+        include: { order: { include: { customer: true } } },
+        orderBy: { createdAt: "desc" },
+        take: 10
+      })
+    ]);
+
   const kpis = [
-    { label: "Active Jobs", value: "48" },
-    { label: "Proofs Waiting", value: "11" },
-    { label: "Shipping Today", value: "19" },
-    { label: "At Risk", value: "3" }
+    { label: "Active Jobs", value: activeJobs },
+    { label: "Proofs Waiting", value: proofsWaiting },
+    { label: "Shipping Today", value: shippingToday },
+    { label: "At Risk", value: atRisk }
   ];
 
-  const pipeline = [
-    { name: "CC-2409 · Product Sheets", detail: "12,000 units · Due Tue", status: "Proof Sent" },
-    { name: "CC-2410 · Event Flyers", detail: "8,500 units · Due Wed", status: "Printing" },
-    { name: "CC-2412 · Invoice Books", detail: "2,100 units · Due Fri", status: "Awaiting Approval" }
+  const pipeline = pipelineRaw
+    .sort((a, b) => {
+      const order = [
+        "RECEIVED",
+        "PROOF_PREPARING",
+        "PROOF_SENT",
+        "AWAITING_APPROVAL",
+        "APPROVED",
+        "PRINTING",
+        "READY_TO_SHIP",
+        "SHIPPED"
+      ];
+      return order.indexOf(a.status) - order.indexOf(b.status);
+    })
+    .map((row) => ({
+      status: STATUS_LABELS[row.status] || row.status,
+      count: row._count
+    }));
+
+  const navItems = [
+    { href: "/", label: "Dashboard", active: true },
+    { href: "/orders", label: "Orders", active: false },
+    { href: "/clients", label: "Clients", active: false }
   ];
 
-  const proofQueue = [
-    { name: "Warehouse Signage v3", detail: "Uploaded by Madison", status: "Needs Review" },
-    { name: "Price List A2", detail: "Uploaded by Elias", status: "Client Review" },
-    { name: "Membership Form", detail: "Uploaded by Team", status: "Approved" }
-  ];
-
-  const plans = [
-    { name: "Starter", price: "$149", features: ["1 team", "Core order tracking", "Email notifications"] },
-    {
-      name: "Growth",
-      price: "$349",
-      features: ["5 team seats", "Proof approvals", "Delivery tracking", "Client portal branding"],
-      featured: true
-    },
-    {
-      name: "Scale",
-      price: "$799",
-      features: ["Unlimited seats", "Advanced workflow rules", "Priority support", "Custom integrations"]
-    }
-  ];
-
-  const featureMatrix = [
-    { feature: "Estimating", starter: true, growth: true, scale: true },
-    { feature: "Customer Portal", starter: false, growth: true, scale: true },
-    { feature: "Proof Approval Flow", starter: false, growth: true, scale: true },
-    { feature: "Delivery Tracking", starter: false, growth: true, scale: true },
-    { feature: "Advanced Automation", starter: false, growth: false, scale: true },
-    { feature: "API Integrations", starter: false, growth: false, scale: true }
-  ];
-
-  const mark = (value: boolean) => (value ? "Yes" : "No");
+  const disabledNavItems = ["Proofs", "Delivery", "Billing"];
 
   return (
     <main className="portal-shell">
@@ -55,27 +109,44 @@ export default async function HomePage() {
         <aside className="panel sidebar">
           <h2 className="brand">PrintPress</h2>
           <div className="nav">
-            <button className="active">Operations</button>
-            <button>Orders</button>
-            <button>Proofs</button>
-            <button>Clients</button>
-            <button>Delivery</button>
-            <button>Billing</button>
+            {navItems.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`nav-link${item.active ? " active" : ""}`}
+              >
+                {item.label}
+              </Link>
+            ))}
+            {disabledNavItems.map((label) => (
+              <button key={label} className="nav-disabled" disabled type="button">
+                {label}
+                <span className="nav-soon">Soon</span>
+              </button>
+            ))}
+          </div>
+          <div className="sidebar-footer">
+            {session.role === "ADMIN" && (
+              <Link href="/admin" className="nav-link nav-admin">
+                Admin Panel
+              </Link>
+            )}
+            <UserNav name={session.name} role={session.role} />
           </div>
         </aside>
 
         <section className="main">
           <article className="panel hero">
             <div>
-              <h1>Agency Print Operations</h1>
+              <h1>Operations Dashboard</h1>
               <p>
-                Track every job from quote to delivered with approval checkpoints and CRM timelines. Signed in as{" "}
-                {session.name} ({session.role}).
+                Track every job from quote to delivery. Signed in as {session.name} ({session.role}).
               </p>
             </div>
             <div className="hero-side">
-              <div className="badge">SLA 96.4% this month</div>
-              <LogoutButton />
+              {atRisk > 0 && (
+                <div className="badge badge-warning">{atRisk} job{atRisk !== 1 ? "s" : ""} at risk</div>
+              )}
             </div>
           </article>
 
@@ -86,11 +157,6 @@ export default async function HomePage() {
             <Link className="btn" href="/orders">
               Order List
             </Link>
-            <Link className="btn" href="/orders/demo-cc-2410">
-              View Sample Order
-            </Link>
-            {session.role !== "CUSTOMER" ? <Link className="btn" href="/clients/client-crowdclick">View Sample Client</Link> : null}
-            {session.role === "ADMIN" ? <Link className="btn" href="/admin/users">User Admin</Link> : null}
           </div>
 
           <div className="kpi-grid">
@@ -106,13 +172,15 @@ export default async function HomePage() {
             <article className="panel section">
               <h2>Production Pipeline</h2>
               <div className="list">
-                {pipeline.map((item) => (
-                  <div key={item.name} className="row">
+                {pipeline.length === 0 && (
+                  <p className="muted-text">No active orders</p>
+                )}
+                {pipeline.map((stage) => (
+                  <div key={stage.status} className="row">
                     <div>
-                      <strong>{item.name}</strong>
-                      <span>{item.detail}</span>
+                      <strong>{stage.status}</strong>
                     </div>
-                    <div className="pill">{item.status}</div>
+                    <div className="pill">{stage.count} order{stage.count !== 1 ? "s" : ""}</div>
                   </div>
                 ))}
               </div>
@@ -121,59 +189,40 @@ export default async function HomePage() {
             <article className="panel section">
               <h2>Proof Queue</h2>
               <div className="list">
-                {proofQueue.map((item) => (
-                  <div key={item.name} className="row">
+                {proofQueue.length === 0 && (
+                  <p className="muted-text">No pending proofs</p>
+                )}
+                {proofQueue.map((proof) => (
+                  <Link
+                    key={proof.id}
+                    href={`/orders/${proof.orderId}`}
+                    className="row row-link"
+                  >
                     <div>
-                      <strong>{item.name}</strong>
-                      <span>{item.detail}</span>
+                      <strong>{proof.order.title}</strong>
+                      <span>{proof.order.customer.name} &middot; {proof.fileName}</span>
                     </div>
-                    <div className="pill">{item.status}</div>
-                  </div>
+                    <div className="pill">
+                      {timeAgo(proof.createdAt)}
+                    </div>
+                  </Link>
                 ))}
               </div>
             </article>
           </div>
-
-          <article className="panel plans">
-            <h2>Plan Options</h2>
-            <div className="plan-grid">
-              {plans.map((plan) => (
-                <div key={plan.name} className={`plan ${plan.featured ? "featured" : ""}`}>
-                  <h3>{plan.name}</h3>
-                  <div className="price">{plan.price}/mo</div>
-                  <ul>
-                    {plan.features.map((feature) => (
-                      <li key={feature}>{feature}</li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
-            </div>
-            <div className="matrix-wrap">
-              <table className="matrix">
-                <thead>
-                  <tr>
-                    <th>Features</th>
-                    <th>Starter</th>
-                    <th>Growth</th>
-                    <th>Scale</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {featureMatrix.map((row) => (
-                    <tr key={row.feature}>
-                      <td>{row.feature}</td>
-                      <td>{mark(row.starter)}</td>
-                      <td>{mark(row.growth)}</td>
-                      <td>{mark(row.scale)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </article>
         </section>
       </div>
     </main>
   );
+}
+
+function timeAgo(date: Date): string {
+  const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
+  if (seconds < 60) return "just now";
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  return `${days}d ago`;
 }

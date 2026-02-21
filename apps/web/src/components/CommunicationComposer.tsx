@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
+import { useToast } from "@/components/ToastProvider";
 
 export function CommunicationComposer({
   customerId,
@@ -13,6 +14,7 @@ export function CommunicationComposer({
   defaultTo: string;
 }) {
   const router = useRouter();
+  const { addToast } = useToast();
   const [pending, setPending] = useState(false);
   const [result, setResult] = useState<string | null>(null);
 
@@ -42,10 +44,13 @@ export function CommunicationComposer({
       }
 
       setResult("Communication queued");
+      addToast("Email queued for delivery", "success");
       event.currentTarget.reset();
       router.refresh();
     } catch (error) {
-      setResult(error instanceof Error ? error.message : "Failed to send");
+      const msg = error instanceof Error ? error.message : "Failed to send";
+      setResult(msg);
+      addToast("Failed to send message. Please try again.", "error");
     } finally {
       setPending(false);
     }

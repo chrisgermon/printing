@@ -2,9 +2,11 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useToast } from "@/components/ToastProvider";
 
 export function ProofReviewActions({ proofId }: { proofId: string }) {
   const router = useRouter();
+  const { addToast } = useToast();
   const [note, setNote] = useState("");
   const [pending, setPending] = useState<"APPROVED" | "REJECTED" | null>(null);
   const [result, setResult] = useState<string | null>(null);
@@ -24,11 +26,15 @@ export function ProofReviewActions({ proofId }: { proofId: string }) {
         throw new Error("Unable to submit proof review.");
       }
 
-      setResult(action === "APPROVED" ? "Proof approved" : "Proof rejected");
+      const msg = action === "APPROVED" ? "Proof approved" : "Proof rejected";
+      setResult(msg);
+      addToast(msg, "success");
       setNote("");
       router.refresh();
     } catch (error) {
-      setResult(error instanceof Error ? error.message : "Review failed");
+      const errMsg = error instanceof Error ? error.message : "Review failed";
+      setResult(errMsg);
+      addToast("Failed to submit review. Please try again.", "error");
     } finally {
       setPending(null);
     }

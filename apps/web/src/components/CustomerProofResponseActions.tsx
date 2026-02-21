@@ -2,9 +2,11 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useToast } from "@/components/ToastProvider";
 
 export function CustomerProofResponseActions({ proofId }: { proofId: string }) {
   const router = useRouter();
+  const { addToast } = useToast();
   const [note, setNote] = useState("");
   const [pending, setPending] = useState<"APPROVED" | "REJECTED" | null>(null);
   const [result, setResult] = useState<string | null>(null);
@@ -23,11 +25,15 @@ export function CustomerProofResponseActions({ proofId }: { proofId: string }) {
         throw new Error("Could not submit proof response.");
       }
 
-      setResult(action === "APPROVED" ? "You approved this proof" : "Requested changes recorded");
+      const msg = action === "APPROVED" ? "You approved this proof" : "Requested changes recorded";
+      setResult(msg);
+      addToast(msg, "success");
       setNote("");
       router.refresh();
     } catch (error) {
-      setResult(error instanceof Error ? error.message : "Failed to submit response");
+      const errMsg = error instanceof Error ? error.message : "Failed to submit response";
+      setResult(errMsg);
+      addToast("Failed to submit response. Please try again.", "error");
     } finally {
       setPending(null);
     }
