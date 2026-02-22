@@ -60,14 +60,14 @@ services:
         value: https://crowdclick.com.au
         scope: RUN_AND_BUILD_TIME
       - key: AUTH_SECRET
-        value: 9MfItK5Wq7LM1J05ry9WkshgHoGT6O/mgcrxEPy5YzQ=
+        value: REPLACE_ME
         type: SECRET
         scope: RUN_TIME
       - key: AUTH_TRUST_HOST
         value: "true"
         scope: RUN_TIME
       - key: INTERNAL_API_TOKEN
-        value: e7be685d146d1f63ef55f041ace3c42aea916d719409bdc3968eeccdc1ca0b55
+        value: REPLACE_ME
         type: SECRET
         scope: RUN_TIME
 
