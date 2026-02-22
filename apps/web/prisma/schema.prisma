@@ -189,13 +189,122 @@ model CommunicationLog {
 }
 
 model Company {
-  id           String        @id @default(cuid())
-  name         String
-  isInternal   Boolean       @default(false)
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  customers    Customer[]
-  userAccounts UserAccount[]
+  id             String            @id @default(cuid())
+  name           String
+  isInternal     Boolean           @default(false)
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  customers      Customer[]
+  userAccounts   UserAccount[]
+  settings       CompanySettings?
+  emailTemplates EmailTemplate[]
 
   @@unique([name])
+}
+
+model CompanySettings {
+  id                        String   @id @default(cuid())
+  companyId                 String   @unique
+  company                   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  
+  // Email Configuration
+  emailFromName             String?
+  emailFromAddress          String?
+  emailReplyTo              String?
+  useCustomEmailProvider    Boolean  @default(false)
+  customPostmarkToken       String?
+  customMailgunDomain       String?
+  customMailgunApiKey       String?
+  
+  // Feature Toggles
+  enableProofWorkflow       Boolean  @default(true)
+  enableCustomerPortal      Boolean  @default(true)
+  enableAutoNotifications   Boolean  @default(true)
+  requireProofApproval      Boolean  @default(true)
+  
+  // Branding
+  brandLogoUrl              String?
+  brandPrimaryColor         String?
+  customEmailFooter         String?
+  
+  // Notifications
+  notifyOnOrderCreated      Boolean  @default(true)
+  notifyOnStatusUpdate      Boolean  @default(true)
+  notifyOnProofReview       Boolean  @default(true)
+  notifyOnProofResponse     Boolean  @default(true)
+  
+  createdAt                 DateTime @default(now())
+  updatedAt                 DateTime @updatedAt
+  
+  @@index([companyId])
+}
+
+model EmailTemplate {
+  id          String   @id @default(cuid())
+  companyId   String?  // null = system default
+  company     Company? @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  
+  name        String   // e.g., "ORDER_CREATED", "STATUS_UPDATE"
+  subject     String
+  textBody    String   // Plain text version
+  htmlBody    String?  // HTML version (optional)
+  description String?  // Admin-facing description
+  
+  isActive    Boolean  @default(true)
+  isDefault   Boolean  @default(false) // System fallback
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  createdBy   String
+  
+  @@unique([companyId, name])
+  @@index([companyId])
+  @@index([name])
+}
+
+model SystemSettings {
+  id    String @id @default(cuid())
+  key   String @unique
+  value String
+  
+  // Metadata
+  category    String   // "email", "storage", "notifications", etc.
+  description String?
+  isSensitive Boolean  @default(false) // Mask in UI (e.g., API keys)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  updatedBy   String?
+  
+  @@index([category])
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  
+  // Who
+  actorId     String?  // UserAccount ID or null for system
+  actorEmail  String
+  actorRole   String
+  
+  // What
+  action      String   // "CREATE", "UPDATE", "DELETE", "LOGIN", etc.
+  resource    String   // "USER", "ORDER", "COMPANY", "SETTINGS", etc.
+  resourceId  String?  // ID of affected resource
+  
+  // Details
+  details     Json?    // Before/after values, etc.
+  ipAddress   String?
+  userAgent   String?
+  
+  // Scope
+  companyId   String?  // For company-scoped actions
+  
+  createdAt   DateTime @default(now())
+  
+  @@index([createdAt])
+  @@index([actorId])
+  @@index([resource, resourceId])
+  @@index([companyId])
+  @@index([action])
 }

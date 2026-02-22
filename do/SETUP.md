@@ -1,9 +1,15 @@
-# DigitalOcean Setup (v1)
+# DigitalOcean Setup (v1) - Sydney Region
 
-## 1. Create managed resources
+## Region Notice
 
-1. Create **Managed PostgreSQL** in the same region as App Platform (recommended: `nyc3`).
-2. Create **Spaces** bucket for proofs (example: `printpress-proofs`) in `nyc3`.
+**This configuration is set for Sydney (syd) region.** Ensure all resources (database, Spaces, App Platform) are created in the same region for optimal performance.
+
+---
+
+## 1. Create managed resources in Sydney region
+
+1. Create **Managed PostgreSQL** in the `syd` region.
+2. Create **Spaces** bucket for proofs (example: `printpress-proofs`) in `syd1`.
 3. In Spaces settings, create an **Access Key + Secret** with read/write bucket access.
 4. (Optional) Enable Spaces CDN and note the CDN URL.
 
@@ -13,21 +19,22 @@
 2. Push this scaffold.
 3. Update `do/app.platform.yaml` with your real `repo` and domain values.
 
-## 3. App Platform create
+## 3. App Platform create in Sydney
 
 1. In DigitalOcean, App Platform -> Create App.
 2. Choose **GitHub source** and this repo.
-3. Import from `do/app.platform.yaml`.
-4. Verify two components are detected:
+3. Select **Sydney** as the datacenter region.
+4. Import from `do/app.platform.yaml`.
+5. Verify two components are detected:
    - `web` service
    - `notifications-worker` worker
-5. Verify one database component:
-   - `db` PostgreSQL 16
+6. Verify one database component:
+   - `db` PostgreSQL 16 (in Sydney region)
 
-## 3.1 Component commands
+### 3.1 Component commands
 
 - `web` build command:
-  - `npm install && npm run build:web`
+  - `npm install && npm --workspace @printpress/web run prisma:generate && npm run build:web`
 - `web` run command:
   - `npm --workspace @printpress/web run prisma:migrate:deploy && npm run start:web`
 - `notifications-worker` build command:
@@ -40,8 +47,8 @@
 Set these in App Platform component settings:
 
 - `DATABASE_URL` -> generated from managed DB connection string.
-- `SPACES_REGION` -> `nyc3`
-- `SPACES_ENDPOINT` -> `https://nyc3.digitaloceanspaces.com`
+- `SPACES_REGION` -> `syd1`
+- `SPACES_ENDPOINT` -> `https://syd1.digitaloceanspaces.com`
 - `SPACES_BUCKET` -> your bucket name
 - `SPACES_ACCESS_KEY` -> from Spaces key
 - `SPACES_SECRET_KEY` -> from Spaces key
@@ -120,3 +127,44 @@ Scale rules once traffic grows:
 - Use pre-signed upload URLs only; never expose Spaces secret to client.
 - Rotate `AUTH_SECRET` periodically and enforce strong user passwords.
 - Add rate limiting and audit log review for admin actions.
+
+---
+
+# Migration: Moving from NYC to Sydney
+
+If you accidentally deployed to NYC and need to migrate to Sydney:
+
+## Option 1: Create new app in Sydney (Recommended)
+
+1. **Create new App Platform app** in Sydney region using this spec
+2. **Create new database** in Sydney or use existing Sydney database
+3. **Update environment variables** with Sydney Spaces credentials
+4. **Run database migrations** on the new database
+5. **Test thoroughly** before switching DNS
+6. **Update DNS** to point to new Sydney app
+7. **Delete old NYC app** once migration is verified
+
+## Option 2: App Platform migration (if supported)
+
+Note: DigitalOcean App Platform does not support changing regions for existing apps. You must create a new app in the correct region.
+
+## Data Migration
+
+If you have data in the NYC database that needs to be migrated:
+
+```bash
+# Export from NYC database
+pg_dump $NYC_DATABASE_URL > backup.sql
+
+# Import to Sydney database
+psql $SYDNEY_DATABASE_URL < backup.sql
+```
+
+## Files Migration
+
+If you have files in NYC Spaces:
+
+```bash
+# Using s3cmd or aws-cli configured for both regions
+aws s3 sync s3://nyc-bucket s3://syd-bucket --source-region nyc3 --region syd1
+```

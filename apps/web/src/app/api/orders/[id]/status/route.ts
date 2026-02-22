@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import { auth } from "@/auth";
 import { z } from "zod";
+import { logAudit } from "@/lib/audit";
 
 const statusSchema = z.object({
   status: z.enum([
@@ -69,6 +70,17 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
         note: payload.note ?? null
       }
     }
+  });
+
+  await logAudit({
+    actorId: session.user.id,
+    actorEmail: session.user.email || "unknown",
+    actorRole: session.user.role,
+    action: "UPDATE",
+    resource: "ORDER",
+    resourceId: order.id,
+    companyId: existingOrder.customer.companyId || undefined,
+    details: { previousStatus: existingOrder.status, newStatus: payload.status, note: payload.note }
   });
 
   return Response.json({ ok: true, orderId: order.id, status: order.status });

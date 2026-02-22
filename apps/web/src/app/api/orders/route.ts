@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic';
 import { prisma } from "@/lib/db";
 import { auth } from "@/auth";
 import { z } from "zod";
+import { logAudit } from "@/lib/audit";
 
 const createOrderSchema = z.object({
   customerEmail: z.string().email(),
@@ -68,6 +69,16 @@ export async function POST(req: Request) {
       }
     });
 
+    await logAudit({
+      actorId: session.user.id,
+      actorEmail: session.user.email || "unknown",
+      actorRole: session.user.role,
+      action: "CREATE",
+      resource: "ORDER",
+      resourceId: order.id,
+      details: { title: payload.title, customerId: assignedCustomer.id }
+    });
+
     return Response.json({ orderId: order.id, status: order.status }, { status: 201 });
   }
 
@@ -124,6 +135,16 @@ export async function POST(req: Request) {
         orderId: order.id
       }
     }
+  });
+
+  await logAudit({
+    actorId: session.user.id,
+    actorEmail: session.user.email || "unknown",
+    actorRole: session.user.role,
+    action: "CREATE",
+    resource: "ORDER",
+    resourceId: order.id,
+    details: { title: payload.title, customerId: customer.id, customerEmail: payload.customerEmail }
   });
 
   return Response.json({ orderId: order.id, status: order.status }, { status: 201 });
